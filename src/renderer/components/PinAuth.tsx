@@ -11,7 +11,7 @@ interface PinAuthProps {
   onAuthSuccess: (pin: string, data: RootData) => void;
 }
 
-type AuthMode = 'select' | 'login' | 'create' | 'restore';
+type AuthMode = 'select' | 'login' | 'login-pin' | 'restore' | 'create';
 
 const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
   const [pin, setPin] = useState('');
@@ -134,7 +134,7 @@ const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
         if (checkResponse.success) {
           setCloudDataExists(checkResponse.data === true);
           if (!checkResponse.data) {
-            setError('クラウドにデータがありません。新しく作成してください。');
+            setError('クラウドにデータがありません。');
           }
         }
       } else {
@@ -173,7 +173,7 @@ const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
   /**
    * 戻るボタン処理
    */
-  const handleBack = () => {
+  const handleBackToSelect = () => {
     setMode('select');
     setCloudUser(null);
     setCloudDataExists(false);
@@ -181,6 +181,15 @@ const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
     setError('');
     setPin('');
     setConfirmPin('');
+  };
+
+  const handleBackToLogin = () => {
+    setMode('login');
+    setCloudUser(null);
+    setCloudDataExists(false);
+    setDownloaded(false);
+    setError('');
+    setPin('');
   };
 
   // 共通のコンテナスタイル
@@ -226,13 +235,62 @@ const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
     );
   }
 
-  // ========== ログイン画面 ==========
+  // ========== ログイン選択画面 ==========
   if (mode === 'login') {
     return (
       <div style={containerStyle}>
         <div className="card" style={cardStyle}>
           <h1 style={{ marginBottom: '24px', textAlign: 'center', color: '#333' }}>
             ログイン
+          </h1>
+
+          <button
+            className="btn-primary"
+            onClick={() => setMode('login-pin')}
+            style={{ width: '100%', padding: '14px', fontSize: '16px', marginBottom: '12px' }}
+          >
+            PINでログイン
+          </button>
+
+          <button
+            className="btn-secondary"
+            onClick={() => setMode('restore')}
+            style={{ width: '100%', padding: '14px', fontSize: '16px' }}
+          >
+            クラウドから復元
+          </button>
+
+          <p style={{ textAlign: 'center', color: '#888', margin: '12px 0', fontSize: '13px' }}>
+            別のPCで使っていた場合
+          </p>
+
+          <button
+            onClick={handleBackToSelect}
+            style={{
+              width: '100%',
+              marginTop: '8px',
+              padding: '10px',
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ← 戻る
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== PIN入力画面 ==========
+  if (mode === 'login-pin') {
+    return (
+      <div style={containerStyle}>
+        <div className="card" style={cardStyle}>
+          <h1 style={{ marginBottom: '24px', textAlign: 'center', color: '#333' }}>
+            PINでログイン
           </h1>
 
           <form onSubmit={handleLogin}>
@@ -266,99 +324,7 @@ const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
           </form>
 
           <button
-            onClick={handleBack}
-            style={{
-              width: '100%',
-              marginTop: '16px',
-              padding: '10px',
-              background: 'none',
-              border: 'none',
-              color: '#666',
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}
-          >
-            ← 戻る
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ========== 新規作成選択画面 ==========
-  if (mode === 'create') {
-    return (
-      <div style={containerStyle}>
-        <div className="card" style={cardStyle}>
-          <h1 style={{ marginBottom: '24px', textAlign: 'center', color: '#333' }}>
-            新しいアカウント
-          </h1>
-
-          <button
-            className="btn-primary"
-            onClick={() => setMode('restore')}
-            style={{ width: '100%', padding: '14px', fontSize: '16px', marginBottom: '12px' }}
-          >
-            クラウドから復元する
-          </button>
-
-          <p style={{ textAlign: 'center', color: '#888', margin: '12px 0', fontSize: '13px' }}>
-            別のPCで使っていた場合
-          </p>
-
-          <div style={{ borderTop: '1px solid #ddd', margin: '16px 0' }} />
-
-          <form onSubmit={handleCreatePin}>
-            <div style={{ marginBottom: '20px' }}>
-              <label htmlFor="pin" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                新しいPINを設定（4桁）
-              </label>
-              <input
-                id="pin"
-                type="password"
-                value={pin}
-                onChange={handlePinChange}
-                placeholder="0000"
-                maxLength={4}
-                disabled={loading}
-                style={{ fontSize: '24px', textAlign: 'center', letterSpacing: '8px' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label htmlFor="confirmPin" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                PINを再入力
-              </label>
-              <input
-                id="confirmPin"
-                type="password"
-                value={confirmPin}
-                onChange={handleConfirmPinChange}
-                placeholder="0000"
-                maxLength={4}
-                disabled={loading}
-                style={{ fontSize: '24px', textAlign: 'center', letterSpacing: '8px' }}
-              />
-            </div>
-
-            {error && <div className="error" style={{ marginBottom: '16px' }}>{error}</div>}
-
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading || pin.length !== 4 || confirmPin.length !== 4}
-              style={{ width: '100%', padding: '12px', fontSize: '16px' }}
-            >
-              {loading ? '処理中...' : 'アカウントを作成'}
-            </button>
-
-            <div style={{ marginTop: '16px', fontSize: '13px', color: '#666', textAlign: 'center' }}>
-              <p>※PINは忘れないように保管してください</p>
-            </div>
-          </form>
-
-          <button
-            onClick={handleBack}
+            onClick={handleBackToLogin}
             style={{
               width: '100%',
               marginTop: '16px',
@@ -504,7 +470,86 @@ const PinAuth: React.FC<PinAuthProps> = ({ onAuthSuccess }) => {
 
           {/* 戻るボタン */}
           <button
-            onClick={() => { setMode('create'); setCloudUser(null); setCloudDataExists(false); setDownloaded(false); setError(''); }}
+            onClick={handleBackToLogin}
+            style={{
+              width: '100%',
+              marginTop: '16px',
+              padding: '10px',
+              background: 'none',
+              border: 'none',
+              color: '#666',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ← 戻る
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== 新規アカウント作成画面 ==========
+  if (mode === 'create') {
+    return (
+      <div style={containerStyle}>
+        <div className="card" style={cardStyle}>
+          <h1 style={{ marginBottom: '24px', textAlign: 'center', color: '#333' }}>
+            新しいアカウントを作成
+          </h1>
+
+          <form onSubmit={handleCreatePin}>
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="pin" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                PINを設定（4桁）
+              </label>
+              <input
+                id="pin"
+                type="password"
+                value={pin}
+                onChange={handlePinChange}
+                placeholder="0000"
+                maxLength={4}
+                autoFocus
+                disabled={loading}
+                style={{ fontSize: '24px', textAlign: 'center', letterSpacing: '8px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="confirmPin" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                PINを再入力
+              </label>
+              <input
+                id="confirmPin"
+                type="password"
+                value={confirmPin}
+                onChange={handleConfirmPinChange}
+                placeholder="0000"
+                maxLength={4}
+                disabled={loading}
+                style={{ fontSize: '24px', textAlign: 'center', letterSpacing: '8px' }}
+              />
+            </div>
+
+            {error && <div className="error" style={{ marginBottom: '16px' }}>{error}</div>}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading || pin.length !== 4 || confirmPin.length !== 4}
+              style={{ width: '100%', padding: '12px', fontSize: '16px' }}
+            >
+              {loading ? '処理中...' : 'アカウントを作成'}
+            </button>
+
+            <div style={{ marginTop: '16px', fontSize: '13px', color: '#666', textAlign: 'center' }}>
+              <p>※PINは忘れないように保管してください</p>
+            </div>
+          </form>
+
+          <button
+            onClick={handleBackToSelect}
             style={{
               width: '100%',
               marginTop: '16px',
