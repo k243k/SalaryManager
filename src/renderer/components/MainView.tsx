@@ -26,6 +26,9 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onR
   const [isEditingTransportation, setIsEditingTransportation] = useState(false);
   const [editTransportationValue, setEditTransportationValue] = useState<string>('');
   const [baseTransportation, setBaseTransportation] = useState<string>('0');
+  const [isEditingSpecialAllowance, setIsEditingSpecialAllowance] = useState(false);
+  const [editSpecialAllowanceValue, setEditSpecialAllowanceValue] = useState<string>('');
+  const [baseSpecialAllowance, setBaseSpecialAllowance] = useState<string>('0');
   const [showSettings, setShowSettings] = useState(false);
 
   // 同期後のデータ再読込
@@ -56,9 +59,10 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onR
     }
 
     const transportation = parseInt(baseTransportation, 10) || 0;
+    const specialAllowance = parseInt(baseSpecialAllowance, 10) || 0;
 
     const newData = { ...rootData };
-    newData.years[selectedYear] = createEmptyYearData(wage, transportation);
+    newData.years[selectedYear] = createEmptyYearData(wage, transportation, specialAllowance);
 
     const success = await onSaveData(newData);
     if (success) {
@@ -129,6 +133,37 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onR
   };
 
   /**
+   * 特別手当編集開始ハンドラー
+   */
+  const handleStartEditSpecialAllowance = () => {
+    const yearData = rootData.years[selectedYear];
+    if (yearData) {
+      setEditSpecialAllowanceValue((yearData.specialAllowance || 0).toString());
+      setIsEditingSpecialAllowance(true);
+    }
+  };
+
+  /**
+   * 特別手当保存ハンドラー
+   */
+  const handleSaveSpecialAllowance = async () => {
+    const allowance = parseInt(editSpecialAllowanceValue, 10) || 0;
+    if (allowance < 0) {
+      alert('正しい特別手当を入力してください');
+      return;
+    }
+
+    const newData = { ...rootData };
+    if (newData.years[selectedYear]) {
+      newData.years[selectedYear].specialAllowance = allowance;
+      const success = await onSaveData(newData);
+      if (success) {
+        setIsEditingSpecialAllowance(false);
+      }
+    }
+  };
+
+  /**
    * 月データ表示
    */
   const renderMonthView = () => {
@@ -154,6 +189,15 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onR
                   type="number"
                   value={baseTransportation}
                   onChange={(e) => setBaseTransportation(e.target.value)}
+                  style={{ width: '200px' }}
+                />
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '4px' }}>特別手当（円/月）</label>
+                <input
+                  type="number"
+                  value={baseSpecialAllowance}
+                  onChange={(e) => setBaseSpecialAllowance(e.target.value)}
                   style={{ width: '200px' }}
                 />
               </div>
@@ -258,6 +302,43 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onR
                   </button>
                 </div>
               )}
+              {isEditingSpecialAllowance ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>特別手当:</span>
+                  <input
+                    type="number"
+                    value={editSpecialAllowanceValue}
+                    onChange={(e) => setEditSpecialAllowanceValue(e.target.value)}
+                    style={{ width: '80px', padding: '4px 8px' }}
+                  />
+                  <span>円/月</span>
+                  <button
+                    className="btn-primary"
+                    onClick={handleSaveSpecialAllowance}
+                    style={{ padding: '4px 12px', fontSize: '14px' }}
+                  >
+                    保存
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => setIsEditingSpecialAllowance(false)}
+                    style={{ padding: '4px 12px', fontSize: '14px' }}
+                  >
+                    取消
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>特別手当: ¥{yearData.specialAllowance || 0}/月</span>
+                  <button
+                    className="btn-secondary"
+                    onClick={handleStartEditSpecialAllowance}
+                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                  >
+                    編集
+                  </button>
+                </div>
+              )}
               <button className="btn-secondary" onClick={onLogout}>
                 ログアウト
               </button>
@@ -271,8 +352,9 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onR
             <p>出勤日数: {monthData.summary.workDays}日</p>
             <p>月給合計: ¥{monthData.summary.totalWage.toLocaleString()}</p>
             <p>交通費合計: ¥{(monthData.summary.totalTransportationCost || 0).toLocaleString()}</p>
+            <p>特別手当: ¥{(yearData.specialAllowance || 0).toLocaleString()}</p>
             <p style={{ fontWeight: 600 }}>
-              総合計: ¥{(monthData.summary.totalWage + (monthData.summary.totalTransportationCost || 0)).toLocaleString()}
+              総合計: ¥{(monthData.summary.totalWage + (monthData.summary.totalTransportationCost || 0) + (yearData.specialAllowance || 0)).toLocaleString()}
             </p>
             {monthData.summary.monthBonus && <p className="success">✓ 月24日以上加算適用中（全日給+50円）</p>}
           </div>

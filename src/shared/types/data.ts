@@ -46,6 +46,7 @@ export interface CopiedShiftData {
 export interface YearData {
   baseHourlyWage: number; // 基本時給（円）
   transportationCost: number; // 交通費（円/日）
+  specialAllowance: number; // 特別手当（円/月）
   months: Record<string, MonthData>; // キー: "01"〜"12"
   templates?: ShiftTemplate[]; // シフトテンプレート
 }
@@ -137,10 +138,15 @@ export function createEmptyRootData(pinHash: string): RootData {
   };
 }
 
-export function createEmptyYearData(baseHourlyWage: number = 1200, transportationCost: number = 0): YearData {
+export function createEmptyYearData(
+  baseHourlyWage: number = 1200,
+  transportationCost: number = 0,
+  specialAllowance: number = 0
+): YearData {
   return {
     baseHourlyWage,
     transportationCost,
+    specialAllowance,
     months: {},
     templates: [],
   };
