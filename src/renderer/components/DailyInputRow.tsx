@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { DayData, BreakPeriod } from '../../shared/types/data';
+import { DayData, BreakPeriod, CopiedShiftData } from '../../shared/types/data';
 import { formatMinutesToJapanese } from '../../shared/utils/time';
 import { calculateDailyWage } from '../../shared/utils/calculation';
 import { validateWorkAndBreaks } from '../../shared/utils/validation';
@@ -24,6 +24,9 @@ interface DailyInputRowProps {
   dayOfWeekLabel: string;
   holidays: Set<string>;
   onChange: (day: number, newData: DayData) => void;
+  copiedData: CopiedShiftData | null;
+  onCopy: (data: CopiedShiftData) => void;
+  onPaste: (day: number) => void;
 }
 
 const DailyInputRow: React.FC<DailyInputRowProps> = ({
@@ -37,6 +40,9 @@ const DailyInputRow: React.FC<DailyInputRowProps> = ({
   dayOfWeekLabel,
   holidays,
   onChange,
+  copiedData,
+  onCopy,
+  onPaste,
 }) => {
   const [localData, setLocalData] = useState<DayData>(dayData);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -152,6 +158,25 @@ const DailyInputRow: React.FC<DailyInputRowProps> = ({
     [localData, day, onChange, debouncedCalculate]
   );
 
+  // コピー処理
+  const handleCopy = useCallback(() => {
+    if (localData.startTime && localData.endTime) {
+      onCopy({
+        startTime: localData.startTime,
+        endTime: localData.endTime,
+        breaks: [...localData.breaks],
+      });
+    }
+  }, [localData, onCopy]);
+
+  // ペースト処理
+  const handlePaste = useCallback(() => {
+    onPaste(day);
+  }, [day, onPaste]);
+
+  // コピー可能かどうか
+  const canCopy = localData.startTime && localData.endTime;
+
   return (
     <tr className={isHoliday ? 'holiday-row' : ''}>
       {/* 日付 */}
@@ -232,17 +257,38 @@ const DailyInputRow: React.FC<DailyInputRowProps> = ({
 
       {/* 操作 */}
       <td className="action-cell">
-        {localData.worked && localData.calculated.breakdown.length > 0 ? (
+        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {/* コピーボタン */}
           <button
             className="btn-secondary"
-            style={{ padding: '4px 8px', fontSize: '12px' }}
-            onClick={() => setIsModalOpen(true)}
+            style={{ padding: '2px 6px', fontSize: '11px' }}
+            onClick={handleCopy}
+            disabled={!canCopy}
+            title="この日のデータをコピー"
           >
-            内訳
+            コピー
           </button>
-        ) : (
-          <span>-</span>
-        )}
+          {/* ペーストボタン */}
+          <button
+            className="btn-secondary"
+            style={{ padding: '2px 6px', fontSize: '11px' }}
+            onClick={handlePaste}
+            disabled={!copiedData}
+            title="コピーしたデータを貼り付け"
+          >
+            貼付
+          </button>
+          {/* 内訳ボタン */}
+          {localData.worked && localData.calculated.breakdown.length > 0 && (
+            <button
+              className="btn-secondary"
+              style={{ padding: '2px 6px', fontSize: '11px' }}
+              onClick={() => setIsModalOpen(true)}
+            >
+              内訳
+            </button>
+          )}
+        </div>
       </td>
 
       {/* 内訳モーダル */}
@@ -262,6 +308,7 @@ export default React.memo(DailyInputRow, (prev, next) => {
   return (
     prev.dayData === next.dayData &&
     prev.monthBonus === next.monthBonus &&
-    prev.baseHourlyWage === next.baseHourlyWage
+    prev.baseHourlyWage === next.baseHourlyWage &&
+    prev.copiedData === next.copiedData
   );
 });

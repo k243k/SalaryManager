@@ -21,12 +21,33 @@ export interface Settings {
 }
 
 /**
+ * シフトテンプレート
+ */
+export interface ShiftTemplate {
+  id: string; // ユニークID
+  name: string; // テンプレート名（"夜勤", "日勤"など）
+  startTime: string; // 開始時刻 "HH:mm"
+  endTime: string; // 終了時刻 "HH:mm"
+  breaks: BreakPeriod[]; // 休憩時間
+}
+
+/**
+ * コピーされたシフトデータ（コピー&ペースト用）
+ */
+export interface CopiedShiftData {
+  startTime: string;
+  endTime: string;
+  breaks: BreakPeriod[];
+}
+
+/**
  * 年度データ
  */
 export interface YearData {
   baseHourlyWage: number; // 基本時給（円）
   transportationCost: number; // 交通費（円/日）
   months: Record<string, MonthData>; // キー: "01"〜"12"
+  templates?: ShiftTemplate[]; // シフトテンプレート
 }
 
 /**
@@ -121,6 +142,7 @@ export function createEmptyYearData(baseHourlyWage: number = 1200, transportatio
     baseHourlyWage,
     transportationCost,
     months: {},
+    templates: [],
   };
 }
 
