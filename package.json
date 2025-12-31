@@ -1,6 +1,6 @@
 {
   "name": "nikkyu-keisan",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "時給計算アプリ - 個人用勤務管理ツール",
   "main": "dist/main/index.js",
   "scripts": {
