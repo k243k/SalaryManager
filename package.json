@@ -1,7 +1,7 @@
 {
   "name": "nikkyu-keisan",
-  "version": "1.0.1",
-  "description": "\u6642\u7d66\u8a08\u7b97\u30a2\u30d7\u30ea - \u500b\u4eba\u7528\u52e4\u52d9\u7ba1\u7406\u30c4\u30fc\u30eb",
+  "version": "1.1.0",
+  "description": "時給計算アプリ - 個人用勤務管理ツール",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently \"webpack --watch --mode development\" \"electron .\"",
@@ -33,12 +33,13 @@
   },
   "dependencies": {
     "date-fns": "^3.0.0",
+    "electron-updater": "^6.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "build": {
     "appId": "com.nikkyu-keisan.app",
-    "productName": "\u6642\u7d66\u8a08\u7b97\u30a2\u30d7\u30ea",
+    "productName": "時給計算アプリ",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -54,6 +55,11 @@
         "nsis",
         "portable"
       ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "k243k",
+      "repo": "SalaryManager"
     }
   }
 }
