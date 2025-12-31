@@ -45,6 +45,23 @@ const electronAPI: ElectronAPI = {
   // 祝日
   loadHoliday: (year: string) => ipcRenderer.invoke(IPC_CHANNELS.HOLIDAY_LOAD, year),
   getHolidayList: () => ipcRenderer.invoke(IPC_CHANNELS.HOLIDAY_GET_LIST),
+
+  // Firebase認証
+  firebaseSignIn: () => ipcRenderer.invoke(IPC_CHANNELS.FIREBASE_SIGN_IN),
+  firebaseSignOut: () => ipcRenderer.invoke(IPC_CHANNELS.FIREBASE_SIGN_OUT),
+  firebaseGetUser: () => ipcRenderer.invoke(IPC_CHANNELS.FIREBASE_GET_USER),
+  onFirebaseAuthStateChanged: (callback) => {
+    ipcRenderer.on(IPC_CHANNELS.FIREBASE_AUTH_STATE_CHANGED, (_, user) => {
+      callback(user);
+    });
+  },
+
+  // 同期
+  syncUpload: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_UPLOAD),
+  syncDownload: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_DOWNLOAD),
+  syncFull: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_FULL),
+  getSyncStatus: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_STATUS),
+  checkCloudData: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_CHECK_CLOUD),
 };
 
 /**

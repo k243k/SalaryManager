@@ -3,7 +3,7 @@
  * Main/Rendererプロセス間通信のハンドラー実装
  */
 
-import { ipcMain } from 'electron';
+import { ipcMain, BrowserWindow } from 'electron';
 import { IPC_CHANNELS, IPCResponse } from '../shared/types/ipc';
 import {
   dataFileExists,
@@ -15,11 +15,20 @@ import {
 } from './store';
 import { RootData, createEmptyYearData, createEmptyMonthData } from '../shared/types/data';
 import { loadHolidaysFromFile, createHolidaySet } from '../shared/utils/holiday';
+import { initializeFirebase } from './firebase/config';
+import { signInWithGoogle, signOutFromFirebase, getCurrentUser, setupAuthStateListener } from './firebase/auth';
+import { uploadToCloud, downloadFromCloud, syncData, getSyncStatus, checkCloudData } from './firebase/sync';
+
+let mainWindowRef: BrowserWindow | null = null;
 
 /**
  * IPCハンドラーをセットアップ
  */
-export function setupIPCHandlers(): void {
+export function setupIPCHandlers(mainWindow?: BrowserWindow): void {
+  if (mainWindow) {
+    mainWindowRef = mainWindow;
+  }
+
   // 認証関連
   setupAuthHandlers();
 
@@ -37,6 +46,9 @@ export function setupIPCHandlers(): void {
 
   // 祝日マスタ
   setupHolidayHandlers();
+
+  // Firebase関連
+  setupFirebaseHandlers();
 }
 
 /**
@@ -213,4 +225,124 @@ function setupHolidayHandlers(): void {
       return { success: false, error: error instanceof Error ? error.message : '祝日一覧取得に失敗しました' };
     }
   });
+}
+
+/**
+ * Firebase関連ハンドラー
+ */
+function setupFirebaseHandlers(): void {
+  // Firebase初期化
+  initializeFirebase();
+
+  // Google Sign-In
+  ipcMain.handle(IPC_CHANNELS.FIREBASE_SIGN_IN, async (): Promise<IPCResponse> => {
+    try {
+      if (!mainWindowRef) {
+        throw new Error('ウィンドウが初期化されていません');
+      }
+      const user = await signInWithGoogle(mainWindowRef);
+      return {
+        success: true,
+        data: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        },
+      };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'ログインに失敗しました' };
+    }
+  });
+
+  // Sign Out
+  ipcMain.handle(IPC_CHANNELS.FIREBASE_SIGN_OUT, async (): Promise<IPCResponse> => {
+    try {
+      await signOutFromFirebase();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'ログアウトに失敗しました' };
+    }
+  });
+
+  // Get Current User
+  ipcMain.handle(IPC_CHANNELS.FIREBASE_GET_USER, async (): Promise<IPCResponse> => {
+    const user = getCurrentUser();
+    if (user) {
+      return {
+        success: true,
+        data: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        },
+      };
+    }
+    return { success: true, data: null };
+  });
+
+  // 同期: アップロード
+  ipcMain.handle(IPC_CHANNELS.SYNC_UPLOAD, async (): Promise<IPCResponse> => {
+    try {
+      await uploadToCloud();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'アップロードに失敗しました' };
+    }
+  });
+
+  // 同期: ダウンロード
+  ipcMain.handle(IPC_CHANNELS.SYNC_DOWNLOAD, async (): Promise<IPCResponse> => {
+    try {
+      const downloaded = await downloadFromCloud();
+      return { success: true, data: downloaded };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'ダウンロードに失敗しました' };
+    }
+  });
+
+  // 同期: 双方向
+  ipcMain.handle(IPC_CHANNELS.SYNC_FULL, async (): Promise<IPCResponse> => {
+    try {
+      const result = await syncData();
+      return { success: true, data: result };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : '同期に失敗しました' };
+    }
+  });
+
+  // 同期状態取得
+  ipcMain.handle(IPC_CHANNELS.SYNC_STATUS, async (): Promise<IPCResponse> => {
+    return { success: true, data: getSyncStatus() };
+  });
+
+  // クラウドデータ確認
+  ipcMain.handle(IPC_CHANNELS.SYNC_CHECK_CLOUD, async (): Promise<IPCResponse> => {
+    try {
+      const exists = await checkCloudData();
+      return { success: true, data: exists };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'クラウドデータ確認に失敗しました' };
+    }
+  });
+
+  // 認証状態の変化をRendererに通知
+  if (mainWindowRef) {
+    setupAuthStateListener((user) => {
+      if (mainWindowRef && !mainWindowRef.isDestroyed()) {
+        mainWindowRef.webContents.send(
+          IPC_CHANNELS.FIREBASE_AUTH_STATE_CHANGED,
+          user
+            ? {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+              }
+            : null
+        );
+      }
+    });
+  }
 }

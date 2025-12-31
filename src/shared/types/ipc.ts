@@ -4,6 +4,7 @@
  */
 
 import { RootData, YearData, MonthData, DayData } from './data';
+import { FirebaseUserInfo, SyncStatus, SyncResult } from './sync';
 
 /**
  * IPCチャンネル名
@@ -37,6 +38,19 @@ export const IPC_CHANNELS = {
   // 祝日マスタ
   HOLIDAY_LOAD: 'holiday:load',
   HOLIDAY_GET_LIST: 'holiday:get-list',
+
+  // Firebase認証
+  FIREBASE_SIGN_IN: 'firebase:sign-in',
+  FIREBASE_SIGN_OUT: 'firebase:sign-out',
+  FIREBASE_GET_USER: 'firebase:get-user',
+  FIREBASE_AUTH_STATE_CHANGED: 'firebase:auth-state-changed',
+
+  // 同期
+  SYNC_UPLOAD: 'sync:upload',
+  SYNC_DOWNLOAD: 'sync:download',
+  SYNC_FULL: 'sync:full',
+  SYNC_STATUS: 'sync:status',
+  SYNC_CHECK_CLOUD: 'sync:check-cloud',
 } as const;
 
 /**
@@ -264,6 +278,19 @@ export interface ElectronAPI {
   // 祝日
   loadHoliday: (year: string) => Promise<IPCResponse<LoadHolidayResponse>>;
   getHolidayList: () => Promise<IPCResponse<GetHolidayListResponse>>;
+
+  // Firebase認証
+  firebaseSignIn: () => Promise<IPCResponse<FirebaseUserInfo>>;
+  firebaseSignOut: () => Promise<IPCResponse<void>>;
+  firebaseGetUser: () => Promise<IPCResponse<FirebaseUserInfo | null>>;
+  onFirebaseAuthStateChanged: (callback: (user: FirebaseUserInfo | null) => void) => void;
+
+  // 同期
+  syncUpload: () => Promise<IPCResponse<void>>;
+  syncDownload: () => Promise<IPCResponse<boolean>>;
+  syncFull: () => Promise<IPCResponse<SyncResult>>;
+  getSyncStatus: () => Promise<IPCResponse<SyncStatus>>;
+  checkCloudData: () => Promise<IPCResponse<boolean>>;
 }
 
 /**

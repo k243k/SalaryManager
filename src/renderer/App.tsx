@@ -77,6 +77,21 @@ const App: React.FC = () => {
     setState('auth');
   };
 
+  /**
+   * データ再読込ハンドラー（同期後に呼ばれる）
+   */
+  const handleReloadData = async () => {
+    if (!currentPin) return;
+    try {
+      const response = await window.electronApi.loadData(currentPin);
+      if (response.success && response.data) {
+        setRootData(response.data.data);
+      }
+    } catch (error) {
+      console.error('データ再読込エラー:', error);
+    }
+  };
+
   // ローディング中
   if (state === 'loading') {
     return (
@@ -93,7 +108,7 @@ const App: React.FC = () => {
 
   // メイン画面
   if (state === 'authenticated' && rootData) {
-    return <MainView rootData={rootData} onSaveData={handleSaveData} onLogout={handleLogout} />;
+    return <MainView rootData={rootData} onSaveData={handleSaveData} onLogout={handleLogout} onReloadData={handleReloadData} />;
   }
 
   // フォールバック

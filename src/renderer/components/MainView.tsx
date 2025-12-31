@@ -3,17 +3,19 @@
  * 年度・月選択と日次入力テーブル表示
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { RootData, createEmptyYearData, createEmptyMonthData } from '../../shared/types/data';
 import DailyInputTable from './DailyInputTable';
+import SyncSettings from './SyncSettings';
 
 interface MainViewProps {
   rootData: RootData;
   onSaveData: (data: RootData) => Promise<boolean>;
   onLogout: () => void;
+  onReloadData?: () => void;
 }
 
-const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout }) => {
+const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout, onReloadData }) => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
   const [selectedMonth, setSelectedMonth] = useState<string>('01');
@@ -24,6 +26,14 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout }) =
   const [isEditingTransportation, setIsEditingTransportation] = useState(false);
   const [editTransportationValue, setEditTransportationValue] = useState<string>('');
   const [baseTransportation, setBaseTransportation] = useState<string>('0');
+  const [showSettings, setShowSettings] = useState(false);
+
+  // 同期後のデータ再読込
+  const handleDataUpdate = useCallback(() => {
+    if (onReloadData) {
+      onReloadData();
+    }
+  }, [onReloadData]);
 
   // 既存年度 + 現在年±3年を選択肢として生成
   const availableYears = useMemo(() => {
@@ -288,9 +298,30 @@ const MainView: React.FC<MainViewProps> = ({ rootData, onSaveData, onLogout }) =
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* ヘッダー */}
-      <div style={{ backgroundColor: '#007bff', color: 'white', padding: '16px 24px' }}>
-        <h1 style={{ fontSize: '20px' }}>時給計算アプリ</h1>
+      <div style={{ backgroundColor: '#007bff', color: 'white', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontSize: '20px', margin: 0 }}>時給計算アプリ</h1>
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          style={{
+            background: 'rgba(255,255,255,0.2)',
+            border: 'none',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+          }}
+        >
+          {showSettings ? '閉じる' : '設定'}
+        </button>
       </div>
+
+      {/* 設定パネル */}
+      {showSettings && (
+        <div style={{ padding: '16px 24px', backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
+          <SyncSettings onDataUpdate={handleDataUpdate} />
+        </div>
+      )}
 
       {/* コントロールパネル */}
       <div style={{ backgroundColor: 'white', padding: '16px 24px', borderBottom: '1px solid #dee2e6' }}>

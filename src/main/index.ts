@@ -146,11 +146,11 @@ app.on('ready', () => {
   // 日本語メニューを設定
   createJapaneseMenu();
 
-  // IPCハンドラーをセットアップ
-  setupIPCHandlers();
-
   // メインウィンドウを作成
   createMainWindow();
+
+  // IPCハンドラーをセットアップ（メインウィンドウを渡す）
+  setupIPCHandlers(mainWindow || undefined);
 
   // 自動アップデートをセットアップ
   setupAutoUpdater();
