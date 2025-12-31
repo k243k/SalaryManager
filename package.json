@@ -1,6 +1,6 @@
 {
   "name": "nikkyu-keisan",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "\u6642\u7d66\u8a08\u7b97\u30a2\u30d7\u30ea - \u500b\u4eba\u7528\u52e4\u52d9\u7ba1\u7406\u30c4\u30fc\u30eb",
   "main": "dist/main/index.js",
   "scripts": {
@@ -46,6 +46,7 @@
     "files": [
       "dist/**/*",
       "public/**/*",
+      "Docs/**/*",
       "package.json"
     ],
     "win": {
