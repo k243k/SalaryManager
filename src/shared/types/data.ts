@@ -46,7 +46,7 @@ export interface CopiedShiftData {
 export interface YearData {
   baseHourlyWage: number; // 基本時給（円）
   transportationCost: number; // 交通費（円/日）
-  specialAllowance: number; // 特別手当（円/月）
+  specialAllowance?: number; // 特別手当（円/月）- オプショナル（既存データ互換性のため）
   months: Record<string, MonthData>; // キー: "01"〜"12"
   templates?: ShiftTemplate[]; // シフトテンプレート
 }
