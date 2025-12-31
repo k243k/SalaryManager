@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { DayData, BreakPeriod, CopiedShiftData } from '../../shared/types/data';
+import { DayData, BreakPeriod, CopiedShiftData, createEmptyDayData } from '../../shared/types/data';
 import { formatMinutesToJapanese } from '../../shared/utils/time';
 import { calculateDailyWage } from '../../shared/utils/calculation';
 import { validateWorkAndBreaks } from '../../shared/utils/validation';
@@ -174,6 +174,13 @@ const DailyInputRow: React.FC<DailyInputRowProps> = ({
     onPaste(day);
   }, [day, onPaste]);
 
+  // シフト削除処理
+  const handleDeleteShift = useCallback(() => {
+    const emptyData = createEmptyDayData();
+    setLocalData(emptyData);
+    onChange(day, emptyData);
+  }, [day, onChange]);
+
   // コピー可能かどうか
   const canCopy = localData.startTime && localData.endTime;
 
@@ -286,6 +293,24 @@ const DailyInputRow: React.FC<DailyInputRowProps> = ({
               onClick={() => setIsModalOpen(true)}
             >
               内訳
+            </button>
+          )}
+          {/* 削除ボタン */}
+          {localData.worked && (
+            <button
+              style={{
+                padding: '2px 6px',
+                fontSize: '11px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+              }}
+              onClick={handleDeleteShift}
+              title="このシフトを削除"
+            >
+              削除
             </button>
           )}
         </div>
