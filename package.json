@@ -1,0 +1,58 @@
+{
+  "name": "nikkyu-keisan",
+  "version": "1.0.0",
+  "description": "\u6642\u7d66\u8a08\u7b97\u30a2\u30d7\u30ea - \u500b\u4eba\u7528\u52e4\u52d9\u7ba1\u7406\u30c4\u30fc\u30eb",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "concurrently \"webpack --watch --mode development\" \"electron .\"",
+    "build": "webpack --mode production",
+    "start": "electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
+  },
+  "keywords": [
+    "electron",
+    "timecard",
+    "wage-calculator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "concurrently": "^8.2.0",
+    "css-loader": "^6.8.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0",
+    "style-loader": "^3.3.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.3.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "dependencies": {
+    "date-fns": "^3.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "build": {
+    "appId": "com.nikkyu-keisan.app",
+    "productName": "\u6642\u7d66\u8a08\u7b97\u30a2\u30d7\u30ea",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  }
+}
